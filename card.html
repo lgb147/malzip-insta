@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- 인스타 카드 한 장을 그리는 템플릿. card.html?i=단어번호&s=장번호(1~5) 로 열고 1080x1350으로 캡처한다. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=block">
+<style>
+:root{--bg:#fff;--ink:#0d0d12;--sub:#5a5a6a;--soft:#f2f2f6;--lime:#c6f432;--blue:#2f5bff;--purple:#8b3dff;
+  --display:"Black Han Sans","Apple SD Gothic Neo","Noto Sans CJK KR",sans-serif;
+  --body:"Noto Sans KR","Apple SD Gothic Neo","Noto Sans CJK KR",sans-serif;
+  --mono:"JetBrains Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1350px;overflow:hidden}
+body{font-family:var(--body);color:var(--ink);background:var(--bg);word-break:keep-all}
+#c{width:1080px;height:1350px;padding:80px;display:flex;flex-direction:column;gap:40px}
+.top,.foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:30px}
+.foot{margin-top:auto;border-top:4px solid var(--ink);padding-top:28px}
+.logo{font-family:var(--display);font-size:52px;line-height:1}
+.logo span{background:var(--ink);color:var(--bg);padding:0 10px;margin-left:4px}
+.label{font-family:var(--mono);font-weight:700;font-size:34px;color:var(--purple)}
+.mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:36px;min-height:0}
+.word{font-family:var(--display);line-height:1.08}
+.big{font-family:var(--display);font-size:84px;line-height:1.25}
+.txt{font-size:46px;line-height:1.6}
+.sub{color:var(--sub)}
+.cover{background:var(--lime)}
+.pill{align-self:flex-start;font-size:40px;font-weight:700;border:4px solid var(--ink);border-radius:999px;padding:10px 32px;background:var(--bg)}
+.when{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.when div{background:var(--soft);border-radius:28px;padding:28px 32px}
+.when b{display:block;font-size:44px;line-height:1.35}
+.when .label{font-size:28px}
+.chat{background:var(--soft);border-radius:36px;padding:40px;display:flex;flex-direction:column;gap:24px}
+.chat p{max-width:82%;font-size:44px;line-height:1.45;padding:22px 34px;border-radius:36px;background:var(--bg);border:3px solid #d9d9e2;align-self:flex-start}
+.chat p.me{align-self:flex-end;background:var(--lime);border-color:var(--lime)}
+.last{background:var(--ink);color:var(--bg)}
+.last .foot{border-color:var(--bg)}
+.last .logo span{background:var(--lime);color:var(--ink)}
+.last mark{background:var(--lime);color:var(--ink);padding:0 .1em}
+</style>
+</head>
+<body>
+<div id="c"></div>
+<script src="words.js"></script>
+<script>
+const p=new URLSearchParams(location.search), x=WORDS[+p.get("i")||0], s=+p.get("s")||1, TOTAL=5;
+const c=document.getElementById("c");
+const foot=`<div class="foot"><div class="logo">말<span>.zip</span></div><div>${s} / ${TOTAL}</div></div>`;
+const head=t=>`<div class="top"><span class="label">${t}</span><span>${x.word}</span></div>`;
+const n=x.word.length, size=n<=3?300:n<=5?200:150;const slides={
+ 1:()=>{c.className="cover";return `<div class="top"><span>오늘의_신조어.zip</span><span>${x.year} · ${x.category}</span></div>
+   <div class="mid"><div class="word" style="font-size:${size}px">${x.word}</div><div class="pill">이 말, 무슨 뜻일까?</div></div>`},
+ 2:()=>head("뜻")+`<div class="mid"><div class="big">${x.meaning}</div><div class="txt sub">${x.detail}</div></div>`,
+ 3:()=>head("유래")+`<div class="mid"><div class="txt">${x.origin}</div>
+   <div class="when"><div><span class="label">처음 등장</span><b>${x.first}</b></div><div><span class="label">유행 시기</span><b>${x.peak}</b></div></div></div>`,
+ 4:()=>head("이렇게 써요")+`<div class="mid"><div class="chat">${x.chat.map(m=>`<p class="${m.me?"me":""}">${m.text}</p>`).join("")}</div></div>`,
+ 5:()=>{c.className="last";return `<div class="top"><span>신조어 모의고사</span><span>저장해 두고 써먹기</span></div>
+   <div class="mid"><div class="big">요즘 말,<br><mark>얼마나</mark> 알고 있어?</div><div class="txt">매일 신조어 하나씩 올라와요.<br>팔로우하고 내일 단어도 받아 보세요.</div></div>`}
+};
+c.innerHTML=slides[s]()+foot;
+</script>
+</body>
+</html>
