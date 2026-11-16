@@ -1,9 +1,10 @@
-# 매일 저녁 6시(한국 시간)에 카드를 만들고 인스타그램에 올린다.
+# 매일 밤 10시(한국 시간)에 카드를 만들고 인스타그램에 올린다.
+# 이 폴더(insta)의 내용을 공개 GitHub 저장소의 맨 위에 올려야 동작한다.
 # 저장소 Settings → Secrets and variables → Actions 에 IG_USER_ID, IG_TOKEN 을 등록한다.
 name: daily-post
 on:
   schedule:
-    - cron: "0 9 * * *"   # UTC 09:00 = 한국 시간 18:00
+    - cron: "0 13 * * *"  # UTC 13:00 = 한국 시간 22:00
   workflow_dispatch:        # Actions 탭에서 수동 실행도 가능
 
 permissions:
