@@ -1,10 +1,11 @@
-# 매일 밤 10시(한국 시간)에 카드를 만들고 인스타그램에 올린다.
+# 매일 아침 9시(한국 시간)에 카드를 만들고 인스타그램에 올린다.
+# words.json은 오래된 단어부터 최신 단어 순서이고, next.txt에 다음에 올릴 번호(0부터)가 적혀 있다.
 # 이 폴더(insta)의 내용을 공개 GitHub 저장소의 맨 위에 올려야 동작한다.
 # 저장소 Settings → Secrets and variables → Actions 에 IG_USER_ID, IG_TOKEN 을 등록한다.
 name: daily-post
 on:
   schedule:
-    - cron: "0 13 * * *"  # UTC 13:00 = 한국 시간 22:00
+    - cron: "0 0 * * *"   # UTC 00:00 = 한국 시간 09:00
   workflow_dispatch:        # Actions 탭에서 수동 실행도 가능
 
 permissions:
@@ -27,6 +28,7 @@ jobs:
         id: check
         run: |
           if [ -f "out/$(date +%Y-%m-%d)/posted" ]; then echo "오늘은 이미 올렸습니다. 건너뜁니다."; echo "skip=true" >> "$GITHUB_OUTPUT"; fi
+          if [ "$(cat next.txt)" -ge "$(jq length words.json)" ]; then echo "단어 목록을 다 올렸습니다. words.json에 새 단어를 추가하세요."; echo "skip=true" >> "$GITHUB_OUTPUT"; fi
 
       - name: 카드와 캡션 만들기
         id: make
@@ -56,6 +58,7 @@ jobs:
           ./upload.sh "${{ steps.make.outputs.dir }}"
           # 게시에 성공했을 때만 표시를 남겨서, 같은 날 두 번 올라가지 않게 한다.
           date > "${{ steps.make.outputs.dir }}/posted"
-          git add out
+          echo $(( $(cat next.txt) + 1 )) > next.txt
+          git add out next.txt
           git commit -m "posted: ${{ steps.make.outputs.dir }}"
           git push
