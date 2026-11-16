@@ -1,0 +1,41 @@
+# 매일 저녁 6시(한국 시간)에 카드를 만들고 인스타그램에 올린다.
+# 저장소 Settings → Secrets and variables → Actions 에 IG_USER_ID, IG_TOKEN 을 등록한다.
+name: daily-post
+on:
+  schedule:
+    - cron: "0 9 * * *"   # UTC 09:00 = 한국 시간 18:00
+  workflow_dispatch:        # Actions 탭에서 수동 실행도 가능
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 카드와 캡션 만들기
+        id: make
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick jq fonts-noto-cjk
+          chmod +x make.sh upload.sh
+          echo "dir=$(./make.sh)" >> "$GITHUB_OUTPUT"
+
+      - name: 이미지를 저장소에 올려 공개 주소 만들기
+        run: |
+          git config user.name "malzip-bot"
+          git config user.email "malzip-bot@users.noreply.github.com"
+          git add out
+          git commit -m "cards: ${{ steps.make.outputs.dir }}"
+          git push
+          sleep 60
+
+      - name: 인스타그램에 게시
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IMAGE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/${{ steps.make.outputs.dir }}
+        run: ./upload.sh "${{ steps.make.outputs.dir }}"
