@@ -10,6 +10,11 @@ on:
 permissions:
   contents: write
 
+# 수동 실행과 예약 실행이 겹치면 하나씩 차례로 돌린다.
+concurrency:
+  group: daily-post
+  cancel-in-progress: false
+
 jobs:
   post:
     runs-on: ubuntu-latest
@@ -18,25 +23,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: 오늘 이미 올렸는지 확인
+        id: check
+        run: |
+          if [ -f "out/$(date +%Y-%m-%d)/posted" ]; then echo "오늘은 이미 올렸습니다. 건너뜁니다."; echo "skip=true" >> "$GITHUB_OUTPUT"; fi
+
       - name: 카드와 캡션 만들기
         id: make
+        if: steps.check.outputs.skip != 'true'
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick jq fonts-noto-cjk
           chmod +x make.sh upload.sh
           echo "dir=$(./make.sh)" >> "$GITHUB_OUTPUT"
 
       - name: 이미지를 저장소에 올려 공개 주소 만들기
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "malzip-bot"
           git config user.email "malzip-bot@users.noreply.github.com"
           git add out
-          git commit -m "cards: ${{ steps.make.outputs.dir }}"
+          git commit -m "cards: ${{ steps.make.outputs.dir }}" || echo "바뀐 카드 없음"
           git push
           sleep 60
 
       - name: 인스타그램에 게시
+        if: steps.check.outputs.skip != 'true'
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
           IMAGE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/${{ steps.make.outputs.dir }}
-        run: ./upload.sh "${{ steps.make.outputs.dir }}"
+        run: |
+          ./upload.sh "${{ steps.make.outputs.dir }}"
+          # 게시에 성공했을 때만 표시를 남겨서, 같은 날 두 번 올라가지 않게 한다.
+          date > "${{ steps.make.outputs.dir }}/posted"
+          git add out
+          git commit -m "posted: ${{ steps.make.outputs.dir }}"
+          git push
