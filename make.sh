@@ -1,14 +1,12 @@
 #!/bin/bash
 # 오늘의 신조어 카드 5장(JPG)과 캡션을 만든다.
-# 사용법: ./make.sh          → 날짜에 따라 단어를 자동 선택
+# 사용법: ./make.sh          → next.txt에 적힌 순서의 단어로 생성 (words.json은 오래된 순)
 #         ./make.sh 20       → words.json의 20번째(0부터) 단어로 생성
 # 필요한 것: Chrome, jq (Mac과 GitHub Actions에 기본으로 있음)
 set -euo pipefail
 cd "$(dirname "$0")"
 
-COUNT=$(jq 'length' words.json)
-DAY=$(( $(date +%s) / 86400 ))
-I=${1:-$(( DAY % COUNT ))}
+I=${1:-$(cat next.txt)}
 TODAY=$(date +%Y-%m-%d)
 OUT="out/$TODAY"
 mkdir -p "$OUT"
