@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 
 I=${1:-$(cat next.txt)}
 TODAY=$(date +%Y-%m-%d)
-OUT="out/$TODAY"
+OUT="out/$TODAY"; [ "$(date +%H)" -ge 15 ] && OUT="$OUT-pm"  # 오후(15시 이후) 실행분은 out/날짜-pm 에 따로 만든다.
 mkdir -p "$OUT"
 
 # card.html이 읽을 수 있게 words.json을 스크립트 파일로 감싼다.
