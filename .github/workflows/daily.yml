@@ -6,6 +6,7 @@ name: daily-post
 on:
   schedule:
     - cron: "0 0 * * *"   # UTC 00:00 = 한국 시간 09:00
+    - cron: "0 12 * * *"  # UTC 12:00 = 한국 시간 21:00
   workflow_dispatch:        # Actions 탭에서 수동 실행도 가능
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
       - name: 오늘 이미 올렸는지 확인
         id: check
         run: |
-          if [ -f "out/$(date +%Y-%m-%d)/posted" ]; then echo "오늘은 이미 올렸습니다. 건너뜁니다."; echo "skip=true" >> "$GITHUB_OUTPUT"; fi
+          D="out/$(date +%Y-%m-%d)"; [ "$(date +%H)" -ge 15 ] && D="$D-pm"; if [ -f "$D/posted" ]; then echo "이번 시간대는 이미 올렸습니다. 건너뜁니다."; echo "skip=true" >> "$GITHUB_OUTPUT"; fi
           if [ "$(cat next.txt)" -ge "$(jq length words.json)" ]; then echo "단어 목록을 다 올렸습니다. words.json에 새 단어를 추가하세요."; echo "skip=true" >> "$GITHUB_OUTPUT"; fi
 
       - name: 카드와 캡션 만들기
