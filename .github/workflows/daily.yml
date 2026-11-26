@@ -62,4 +62,5 @@ jobs:
           echo $(( $(cat next.txt) + 1 )) > next.txt
           git add out next.txt
           git commit -m "posted: ${{ steps.make.outputs.dir }}"
+          git pull --rebase || true
           git push
