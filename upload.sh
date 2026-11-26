@@ -52,8 +52,12 @@ done
 if POST=$(call "$IG_USER_ID/media_publish" "creation_id=$CAROUSEL"); then
   echo "게시 완료: $POST"; exit 0
 fi
-sleep 20
+sleep 30
 S=$(status); echo "게시 요청 실패 후 상태: $S"
 if [ "$S" = "PUBLISHED" ]; then echo "게시 완료(오류 응답이었지만 실제로 올라감)"; exit 0; fi
+# 상태 값이 ERROR여도 실제로는 올라간 경우가 있었다. 계정의 최신 게시물 캡션 첫 줄이 이번 캡션과 같으면 성공으로 친다.
+LATEST=$(curl -sS -G "$API/$IG_USER_ID/media" --data-urlencode "fields=caption" --data-urlencode "limit=1" --data-urlencode "access_token=$IG_TOKEN" | jq -r '.data[0].caption // ""' | head -1)
+echo "계정 최신 게시물: $LATEST"
+if [ -n "$LATEST" ] && [ "$LATEST" = "$(head -1 "$DIR/caption.txt")" ]; then echo "게시 완료(오류 응답이었지만 최신 게시물로 확인됨)"; exit 0; fi
 echo "실패: 게시하지 못했습니다." >&2
 exit 1
