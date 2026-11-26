@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- 신조어 모의고사 카드뉴스. quiz.html?s=장번호(1~10) 로 열고 1080x1350으로 캡처한다. 1=표지, 2~9=문제, 10=정답 (인스타 API는 한 게시물에 10장까지) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=block">
+<style>
+/* 매일 올리는 카드(연두·보라)와 구분되게 모의고사는 흰색·검정만 쓴다. */
+:root{--bg:#fff;--ink:#0d0d12;--sub:#6a6a74;--soft:#f3f3f3;--lime:#fff;--blue:#0d0d12;--purple:#0d0d12;
+  --display:"Black Han Sans","Apple SD Gothic Neo","Noto Sans CJK KR",sans-serif;
+  --body:"Noto Sans KR","Apple SD Gothic Neo","Noto Sans CJK KR",sans-serif;
+  --mono:"JetBrains Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1350px;overflow:hidden}
+body{font-family:var(--body);color:var(--ink);background:var(--bg);word-break:keep-all}
+#c{width:1080px;height:1350px;padding:80px;display:flex;flex-direction:column;gap:40px}
+.top,.foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:30px}
+.foot{margin-top:auto;border-top:4px solid var(--ink);padding-top:28px}
+.logo{font-family:var(--display);font-size:52px;line-height:1}
+.logo span{background:var(--ink);color:var(--bg);padding:0 10px;margin-left:4px}
+.label{font-family:var(--mono);font-weight:700;font-size:34px;color:var(--purple)}
+.mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:44px;min-height:0}
+.big{font-family:var(--display);font-size:84px;line-height:1.25}
+.txt{font-size:46px;line-height:1.6}
+.cover{background:var(--ink);color:#fff}
+.cover .foot{border-color:#fff}
+.cover .logo span{background:var(--lime);color:var(--ink)}
+.cover .pill{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.title{font-family:var(--display);font-size:170px;line-height:1.05}
+.pill{align-self:flex-start;font-size:40px;font-weight:700;border:4px solid var(--ink);border-radius:999px;padding:10px 32px;background:var(--bg)}
+.qno{font-family:var(--display);font-size:120px;line-height:1;color:var(--purple)}
+.q{font-family:var(--display);font-size:72px;line-height:1.3}
+.q em{font-style:normal;background:var(--ink);color:#fff;padding:0 .14em}
+.quote{font-size:44px;line-height:1.55;background:var(--soft);border-radius:28px;padding:28px 36px}
+.opts{display:flex;flex-direction:column;gap:22px}
+.opts p{display:flex;align-items:center;gap:28px;font-size:46px;font-weight:500;line-height:1.3;border:4px solid var(--ink);border-radius:28px;padding:22px 32px}
+.opts b{flex:none;width:68px;height:68px;border-radius:50%;background:var(--blue);color:var(--bg);display:grid;place-items:center;font-family:var(--mono);font-size:38px}
+.last{background:var(--ink);color:var(--bg)}
+.last .foot{border-color:var(--bg)}
+.last .logo span{background:var(--lime);color:var(--ink)}
+.ans{display:grid;grid-template-columns:1fr 1fr;gap:20px 28px}
+.ans p{display:flex;align-items:center;gap:20px;font-size:40px;line-height:1.3;background:#24242a;border-radius:24px;padding:20px 26px}
+.ans i{font-style:normal;font-family:var(--mono);font-weight:700;color:var(--sub);width:44px}
+.ans b{flex:none;width:58px;height:58px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center;font-family:var(--mono);font-size:32px}
+.score{font-size:38px;line-height:1.6;color:#c9c9d6}
+.score mark{background:var(--lime);color:var(--ink);padding:0 .15em}
+</style>
+</head>
+<body>
+<div id="c"></div>
+<script>
+// 문제는 words.json에 있는 단어로만 낸다. a = 정답 번호(0~3), w = 정답 해설에 쓸 단어
+const Q=[
+ {y:2017,q:"<em>'욜로'</em>의 뜻은?",o:["혼자 노는 걸 좋아하는 사람","한 번뿐인 인생, 지금을 즐기자","요즘 유행하는 로고","욕심 없이 사는 삶"],a:1,w:"욜로"},
+ {y:2018,q:"<em>'TMI'</em>는 무엇의 줄임말?",o:["Too Much Information","Time Management Issue","Today's Main Item","Talk More Instantly"],a:0,w:"TMI"},
+ {y:2019,q:"<em>'별다줄'</em>의 뜻은?",o:["별다른 줄거리 없음","별로 다르지 않은 줄","별걸 다 줄인다","별이 다 줄었다"],a:2,w:"별다줄"},
+ {y:2021,q:"<em>'머선129'</em>는 무슨 뜻?",o:["무슨 일이야?","먼저 129명","머리를 129번 감기","무서운 숫자 129"],a:0,w:"머선129"},
+ {y:2021,q:"<em>'킹받네'</em>의 뜻은?",o:["왕처럼 대접받네","킹크랩을 받았네","엄청 열받네","기분 최고네"],a:2,w:"킹받네"},
+ {y:2022,q:"<em>'중꺾마'</em>는 무엇의 줄임말?",o:["중간에 꺾인 마음","중심을 꺾는 마무리","중학생의 꺾기 마술","중요한 건 꺾이지 않는 마음"],a:3,w:"중꺾마"},
+ {y:2024,q:"빈칸에 들어갈 말은?",quote:"버스 놓쳤는데 바로 다음 버스 왔어.<br>완전 ______잖아!",o:["어쩔티비","스불재","럭키비키","킹받네"],a:2,w:"럭키비키"},
+ {y:2026,q:"<em>'L을 가져가'</em>의 L은 무슨 뜻?",o:["Love (사랑)","Loss (패배)","Lucky (행운)","Level (레벨)"],a:1,w:"L을 가져가"}
+];
+const L="ABCD", p=new URLSearchParams(location.search), s=+p.get("s")||1, TOTAL=Q.length+2;
+const c=document.getElementById("c");
+const foot=`<div class="foot"><div class="logo">말<span>.zip</span></div><div>${s} / ${TOTAL}</div></div>`;
+let html;
+if(s===1){c.className="cover";
+ html=`<div class="top"><span>신조어_모의고사.zip</span><span>2017 → 2026</span></div>
+ <div class="mid"><div class="title">신조어<br>모의고사</div><div class="txt">욜로부터 L을 가져가까지,<br>8문제 중 몇 개 맞힐 수 있어?</div><div class="pill">넘겨서 풀어 보기 →</div></div>`;
+}else if(s===TOTAL){c.className="last";
+ html=`<div class="top"><span>정답</span><span>몇 개 맞혔어?</span></div>
+ <div class="mid"><div class="ans">${Q.map((x,i)=>`<p><i>${String(i+1).padStart(2,"0")}</i><b>${L[x.a]}</b>${x.w}</p>`).join("")}</div>
+ <div class="score"><mark>7~8개</mark> 영크크 · <mark>4~6개</mark> 요즘 사람 · <mark>0~3개</mark> 늙크크</div></div>`;
+}else{const i=s-2, x=Q[i];
+ html=`<div class="top"><span class="label">Q${i+1}</span><span>${x.y}년 신조어</span></div>
+ <div class="mid"${x.quote?' style="gap:32px"':""}>${x.quote?"":`<div class="qno">${String(i+1).padStart(2,"0")}</div>`}<div class="q">${x.q}</div>${x.quote?`<div class="quote">${x.quote}</div>`:""}
+ <div class="opts">${x.o.map((t,k)=>`<p><b>${L[k]}</b>${t}</p>`).join("")}</div></div>`;
+}
+c.innerHTML=html+foot;
+</script>
+</body>
+</html>
