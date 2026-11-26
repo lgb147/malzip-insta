@@ -28,9 +28,12 @@ call() { # call <경로> <key=value>...  → 응답의 id를 출력, 실패하�
 }
 
 CHILDREN=""
-for S in 1 2 3 4 5; do
+# 폴더에 있는 1.jpg, 2.jpg, ... 를 번호 순서대로 모두 올린다. (매일 카드는 5장, 모의고사는 10장. 인스타 API 최대 10장)
+S=1
+while [ -f "$DIR/$S.jpg" ]; do
   ID=$(call "$IG_USER_ID/media" "image_url=$IMAGE_BASE_URL/$S.jpg" "is_carousel_item=true")
   CHILDREN="${CHILDREN:+$CHILDREN,}$ID"
+  S=$((S + 1))
 done
 
 CAROUSEL=$(call "$IG_USER_ID/media" "media_type=CAROUSEL" "children=$CHILDREN" "caption=$(cat "$DIR/caption.txt")")
