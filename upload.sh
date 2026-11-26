@@ -34,6 +34,26 @@ for S in 1 2 3 4 5; do
 done
 
 CAROUSEL=$(call "$IG_USER_ID/media" "media_type=CAROUSEL" "children=$CHILDREN" "caption=$(cat "$DIR/caption.txt")")
-sleep 10  # 인스타그램이 이미지를 처리할 시간을 준다.
-POST=$(call "$IG_USER_ID/media_publish" "creation_id=$CAROUSEL")
-echo "게시 완료: $POST"
+
+status() { # 게시물 묶음의 처리 상태(FINISHED, IN_PROGRESS, PUBLISHED, ERROR 등)를 출력한다.
+  curl -sS -G "$API/$CAROUSEL" --data-urlencode "fields=status_code" --data-urlencode "access_token=$IG_TOKEN" | jq -r '.status_code // "UNKNOWN"'
+}
+
+# 인스타그램이 이미지를 다 처리할 때까지 최대 2분 기다린다.
+for _ in $(seq 1 12); do
+  S=$(status); echo "처리 상태: $S"
+  [ "$S" = "FINISHED" ] && break
+  sleep 10
+done
+
+# 게시를 한 번만 요청한다. 인스타그램이 "행동이 차단되었습니다" 같은 오류를 돌려줘도 실제로는 올라가는 경우가 있어서,
+# 실패하면 상태를 다시 확인하고 PUBLISHED면 성공으로 친다. (같은 단어가 두 번 올라가는 것을 막는다.)
+# 차단 중에 자꾸 다시 요청하면 더 오래 막힐 수 있으므로 재시도는 하지 않는다.
+if POST=$(call "$IG_USER_ID/media_publish" "creation_id=$CAROUSEL"); then
+  echo "게시 완료: $POST"; exit 0
+fi
+sleep 20
+S=$(status); echo "게시 요청 실패 후 상태: $S"
+if [ "$S" = "PUBLISHED" ]; then echo "게시 완료(오류 응답이었지만 실제로 올라감)"; exit 0; fi
+echo "실패: 게시하지 못했습니다." >&2
+exit 1
